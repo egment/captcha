@@ -1,0 +1,43 @@
+[
+    {
+        "name": "egment/image",
+        "version": "v0.1.1",
+        "version_normalized": "0.1.1.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/egment/image.git",
+            "reference": "98b9077ad194e6fe6910f95eb42f37302dcbf26c"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/egment/image/zipball/98b9077ad194e6fe6910f95eb42f37302dcbf26c",
+            "reference": "98b9077ad194e6fe6910f95eb42f37302dcbf26c",
+            "shasum": "",
+            "mirrors": [
+                {
+                    "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                    "preferred": true
+                }
+            ]
+        },
+        "time": "2020-02-02T11:36:09+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "Egment\\": "src"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Egment",
+                "email": "egment@163.com"
+            }
+        ],
+        "description": "A GD image package for PHP."
+    }
+]

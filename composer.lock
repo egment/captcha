@@ -1,0 +1,57 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "017322d7be45d86108726d9053df4c4d",
+    "packages": [
+        {
+            "name": "egment/image",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/egment/image.git",
+                "reference": "98b9077ad194e6fe6910f95eb42f37302dcbf26c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/egment/image/zipball/98b9077ad194e6fe6910f95eb42f37302dcbf26c",
+                "reference": "98b9077ad194e6fe6910f95eb42f37302dcbf26c",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Egment\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Egment",
+                    "email": "egment@163.com"
+                }
+            ],
+            "description": "A GD image package for PHP.",
+            "time": "2020-02-02T11:36:09+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}
