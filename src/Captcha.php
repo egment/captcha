@@ -43,6 +43,8 @@ class SlideCaptcha
     protected $partMiddlePoint;
     protected $partLeftPoint;
 
+    protected $slideGap = 10;
+
     public $partPoints = [];
     //矩形起点
     public $rectangleStartPoint = [];
@@ -151,6 +153,39 @@ class SlideCaptcha
         return $fn($unauth, $this);
     }
 
+    /**
+     * Authenticate input parameters position.
+     *
+     * @param [type] $benchmark
+     * @return void
+     */
+    public function authSlidePosition($input, $benchmark)
+    {
+        if ($input < ($benchmark - $this->slideGap) || $input > ($benchmark + $this->slideGap)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Set slide gap
+     *
+     * @return void
+     */
+    public function setSlideGap($value)
+    {
+        $this->slideGap = $value;
+    }
+
+    /**
+     * Set slide gap
+     *
+     * @return int
+     */
+    public function getSlideGap()
+    {
+        return $this->slideGap;
+    }
     /**
      * Set captcha max width.
      *
