@@ -1,5 +1,7 @@
 {
     "name": "egment/captcha",
+    "description": "A captcha package for separation web system.",
+    "license": "MIT",
     "authors": [
         {
             "name": "egment",
