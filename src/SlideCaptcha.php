@@ -199,11 +199,11 @@ class SlideCaptcha
                 }
             }
         }
+        $this->drawPartFrame();
+        $this->cutPart();
         $alpha = imagecolorallocatealpha($this->part->getIm(), 0, 0, 0, 127);
         imagecolortransparent($this->part->getIm(), $alpha);
-        $this->drawPartFrame();
         $this->partCreated = true;
-        $this->cutPart();
         return $this->part;
     }
 
