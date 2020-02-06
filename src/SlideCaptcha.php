@@ -14,6 +14,13 @@ class SlideCaptcha
     //拼图部分大小
     const PART_SIZE = 100;
 
+    const FACTOR_POSITION_RIGHT = 0;
+    const FACTOR_POSITION_DOWN = 1;
+    const FACTOR_POSITION_LEFT = 2;
+    const FACTOR_POSITION_UP = 3;
+
+    protected $size;
+
     //master是否创建
     protected $masterCreated = false;
     //part是否创建
@@ -28,7 +35,7 @@ class SlideCaptcha
     //slider captcha大小
     protected $partSize;
     //slider part 半径大小
-    protected $partRadious;
+    protected $factorRadious;
     //origin image resouce.
     protected $originImage;
 
@@ -45,11 +52,38 @@ class SlideCaptcha
 
     protected $slideGap = 10;
 
-    public $partPoints = [];
-    //矩形起点
-    public $rectangleStartPoint = [];
-    //因子起点
-    public $ellipseStartPoint;
+    public $factorPoints = [];
+
+    //Captcha reactangle start properties
+    protected $rectangleStartPoint = [];
+    protected $rectangleXPoint = [];
+    protected $rectangleYPoint = [];
+    protected $rectangleXYPoint = [];
+
+    //reactange pivot point
+    //Up
+    protected $rectPivotUpStart = [];
+    protected $rectPivotUpEnd = [];
+    //Right
+    protected $rectPivotRightStart = [];
+    protected $rectPivotRightEnd = [];
+    //Down
+    protected $rectPivotDownStart = [];
+    protected $rectPivotDownEnd = [];
+    //Left
+    protected $rectPivotLeftStart = [];
+    protected $rectPivotLeftEnd = [];
+
+    //Captcha factor ellipese properties
+    protected $factorStartPoint = [];
+    protected $factorPointIndex;
+
+    public static $factorDrawArcMap = [
+        self::FACTOR_POSITION_RIGHT => [270, 90],
+        self::FACTOR_POSITION_DOWN => [0, 180],
+        self::FACTOR_POSITION_LEFT => [90, 270],
+        self::FACTOR_POSITION_UP => [180, 0],
+    ];
 
     public function __construct(Image $image)
     {
@@ -72,30 +106,60 @@ class SlideCaptcha
         if ($info['width'] > $this->maxWidth || $info['height'] > $this->maxHeight) {
             throw new ErrorException("Image size exceeds maximum.");
         }
-        $size = $size ?: floor($this->image->getHeight() / 5);
+        $this->size = $size = $size ?: floor($this->image->getHeight() / 5);
         //截图部分凸起因子偏移
         $factorOffset = $size / 2;
-        $this->partRadious = $radious = floor($size / 2.5);
+        $this->factorRadious = $radious = floor($size / 2.5);
         $startX = mt_rand($this->offsetStartX + $radious, $info['width'] - $size - $radious);
         $startY = mt_rand($this->offsetStartY + $radious, $info['height'] - $size - $radious);
         $this->partSize = $size;
 
-        $this->partPoints = $points = [
-            [$startX + $factorOffset, $startY],
-            [$startX, $startY + $factorOffset],
+        $this->factorPoints = $points = [
+            //Right
             [$startX + $size, $startY + $factorOffset],
+            //Down
             [$startX + $factorOffset, $startY + $size],
+            //Lelt
+            [$startX, $startY + $factorOffset],
+            //Up
+            [$startX + $factorOffset, $startY],
         ];
+        //factor points
+        $this->factorPointIndex = mt_rand(0, count($points) - 1);
+        $this->factorStartPoint = $points[$this->factorPointIndex];
+
+        //reactangle points
         $this->rectangleStartPoint = [$startX, $startY];
-        $ellipseStartPointIndex = mt_rand(0, count($points) - 1);
-        $this->ellipseStartPoint = $points[$ellipseStartPointIndex];
+        $this->rectangleXPoint = [$startX + $size, $startY];
+        $this->rectangleYPoint = [$startX, $startY + $size];
+        $this->rectangleXYPoint = [$startX + $size, $startY + $size];
+
+        $radiousOffset = $radious / 2;
+
+        //reactangele pivot points
+        //up
+        $this->rectPivotUpStart = [$points[self::FACTOR_POSITION_UP][0] - $radiousOffset, $startY];
+        $this->rectPivotUpEnd = [$points[self::FACTOR_POSITION_UP][0] + $radiousOffset, $startY];
+
+        //right
+        $this->rectPivotRightStart = [$startX + $size, $points[self::FACTOR_POSITION_RIGHT][1] - $radiousOffset];
+        $this->rectPivotRightEnd = [$startX + $size, $points[self::FACTOR_POSITION_RIGHT][1] + $radiousOffset];
+
+        //down
+        $this->rectPivotDownStart = [$points[self::FACTOR_POSITION_DOWN][0] + $radiousOffset, $startY + $size];
+        $this->rectPivotDownEnd = [$points[self::FACTOR_POSITION_DOWN][0] - $radiousOffset, $startY + $size];
+        // dd($points[self::FACTOR_POSITION_DOWN][0]);
+
+        //left
+        $this->rectPivotLeftStart = [$startX, $points[self::FACTOR_POSITION_LEFT][1] + $radiousOffset];
+        $this->rectPivotLeftEnd = [$startX, $points[self::FACTOR_POSITION_LEFT][1] - $radiousOffset];
 
         $this->partMiddlePoint = [$startX + $size / 2, $startY + $size / 2];
-        $this->partLeftPoint = $ellipseStartPointIndex == 1 ? [$points[1][0] - $radious, $points[1][1]] : [$startX, $startY + $size / 2];
+        $this->partLeftPoint = $this->factorPointIndex == 1 ? [$points[1][0] - $radious, $points[1][1]] : [$startX, $startY + $size / 2];
 
         $color = [255, 255, 255];
         $this->image->drawRectangle($this->rectangleStartPoint, $size, $size, $color);
-        $this->image->drawEllipse($this->ellipseStartPoint, $radious, $radious, $color);
+        $this->image->drawEllipse($this->factorStartPoint, $radious, $radious, $color);
         $this->masterCreated = true;
         return $this->image;
     }
@@ -118,7 +182,7 @@ class SlideCaptcha
         $masterMask = new Image($im);
         $masterMask->fillTransparent();
         $masterMask->drawRectangle($this->rectangleStartPoint, $this->partSize, $this->partSize, $white);
-        $masterMask->drawEllipse($this->ellipseStartPoint, $this->partRadious, $this->partRadious, $white);
+        $masterMask->drawEllipse($this->factorStartPoint, $this->factorRadious, $this->factorRadious, $white);
         $this->masterMask = $masterMask;
         // $this->originImage->save();
         $this->part = new Image($partIm);
@@ -137,8 +201,128 @@ class SlideCaptcha
         }
         $alpha = imagecolorallocatealpha($this->part->getIm(), 0, 0, 0, 127);
         imagecolortransparent($this->part->getIm(), $alpha);
+        $this->drawPartFrame();
         $this->partCreated = true;
+        $this->cutPart();
         return $this->part;
+    }
+
+    /**
+     * Draw a frame
+     *
+     * @param array $color
+     * @param integer $alpha
+     * @return void
+     */
+    protected function drawPartFrame(array $color = [], int $alpha = 0)
+    {
+        $this->drawFactorArc($color, $alpha);
+        $this->drawPartUpLine($color, $alpha);
+        $this->drawPartRightLine($color, $alpha);
+        $this->drawPartDownLine($color, $alpha);
+        $this->drawPartLeftLine($color, $alpha);
+    }
+
+    /**
+     * Cut appropriate part size.
+     *
+     * @param integer $offset
+     * @return void
+     */
+    public function cutPart($offset = 1)
+    {
+        $x = $this->rectangleStartPoint[0];
+        $y = $this->rectangleStartPoint[1];
+        $width = $height = $this->size;
+        $radious = ceil($this->factorRadious / 2);
+        if ($this->factorPointIndex == self::FACTOR_POSITION_UP) {
+            $startPoint = [$x, $y - $radious];
+            $height = $height + $radious;
+        } else if ($this->factorPointIndex == self::FACTOR_POSITION_RIGHT) {
+            $startPoint = [$x, $y];
+            $width = $width + $radious;
+        } else if ($this->factorPointIndex == self::FACTOR_POSITION_DOWN) {
+            $startPoint = [$x, $y];
+            $height = $height + $radious;
+        } else {
+            $startPoint = [$x - $radious, $y];
+            $width = $width + $radious;
+        }
+        $this->part->cutRectangle($startPoint, $width + $offset, $height + $offset);
+    }
+
+    /**
+     * Draw factor arc
+     *
+     * @param array $color
+     * @return Image
+     */
+    protected function drawFactorArc(array $color = [], int $alpha = 0)
+    {
+        if (empty($color)) {
+            $color = [255, 255, 255];
+        }
+        $degress = self::$factorDrawArcMap[$this->factorPointIndex];
+        $this->part->drawArc($this->factorStartPoint, $this->factorRadious, $this->factorRadious, $degress[0], $degress[1], $color, $alpha);
+        return $this->part;
+    }
+
+    /**
+     * Draw part up line.
+     *
+     * @param array $color
+     * @return bool
+     */
+    protected function drawPartUpLine(array $color = [], int $alpha = 0)
+    {
+        if (empty($color)) {
+            $color = [255, 255, 255];
+        }
+        if ($this->factorPointIndex == self::FACTOR_POSITION_UP) {
+            $resStart = $this->part->drawLine($this->rectangleStartPoint, $this->rectPivotUpStart, $color, $alpha);
+            $resEnd = $this->part->drawLine($this->rectPivotUpEnd, $this->rectangleXPoint, $color, $alpha);
+            return $resStart && $resEnd ? true : false;
+        }
+        return $this->part->drawLine($this->rectangleStartPoint, $this->rectangleXPoint, $color, $alpha);
+    }
+
+    protected function drawPartRightLine(array $color = [], int $alpha = 0)
+    {
+        if (empty($color)) {
+            $color = [255, 255, 255];
+        }
+        if ($this->factorPointIndex == self::FACTOR_POSITION_RIGHT) {
+            $resStart = $this->part->drawLine($this->rectangleXPoint, $this->rectPivotRightStart, $color, $alpha);
+            $resEnd = $this->part->drawLine($this->rectPivotRightEnd, $this->rectangleXYPoint, $color, $alpha);
+            return $resStart && $resEnd ? true : false;
+        }
+        return $this->part->drawLine($this->rectangleXPoint, $this->rectangleXYPoint, $color, $alpha);
+    }
+
+    protected function drawPartDownLine(array $color = [], int $alpha = 0)
+    {
+        if (empty($color)) {
+            $color = [255, 255, 255];
+        }
+        if ($this->factorPointIndex == self::FACTOR_POSITION_DOWN) {
+            $resStart = $this->part->drawLine($this->rectangleXYPoint, $this->rectPivotDownStart, $color, $alpha);
+            $resEnd = $this->part->drawLine($this->rectPivotDownEnd, $this->rectangleYPoint, $color, $alpha);
+            return $resStart && $resEnd ? true : false;
+        }
+        return $this->part->drawLine($this->rectangleXYPoint, $this->rectangleYPoint, $color, $alpha);
+    }
+
+    protected function drawPartLeftLine(array $color = [], int $alpha = 0)
+    {
+        if (empty($color)) {
+            $color = [255, 255, 255];
+        }
+        if ($this->factorPointIndex == self::FACTOR_POSITION_LEFT) {
+            $resStart = $this->part->drawLine($this->rectangleYPoint, $this->rectPivotLeftStart, $color, $alpha);
+            $resEnd = $this->part->drawLine($this->rectPivotLeftEnd, $this->rectangleStartPoint, $color, $alpha);
+            return $resStart && $resEnd ? true : false;
+        }
+        return $this->part->drawLine($this->rectangleYPoint, $this->rectangleStartPoint, $color, $alpha);
     }
 
     /**
@@ -156,8 +340,8 @@ class SlideCaptcha
     /**
      * Authenticate input parameters position.
      *
-     * @param [type] $benchmark
-     * @return void
+     * @param [mixed] $benchmark
+     * @return bool
      */
     public function authSlidePosition($input, $benchmark)
     {
