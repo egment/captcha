@@ -19,7 +19,7 @@ trait RandomImage
     public function createRandomImage(\Closure $closure = null)
     {
         $bgFiles = true === $this->bgScaned ? $this->bgFiles : $this->scanBgPath();
-        if ($amounts = count($bgFiles) > 0) {
+        if (($amounts = count($bgFiles)) > 0) {
             return $closure ?
             $closure($this->getBgPath()) :
             new Image($bgFiles[mt_rand(0, $amounts - 1)]);
@@ -29,11 +29,10 @@ trait RandomImage
 
     public function scanBgPath()
     {
-        $scanBgExtension = $this->scanBgExtension ?: ['jpg', 'jepg', 'bmp', 'png'];
+        $scanBgExtension = $this->scanBgExtension ?: ['jpg', 'jpeg', 'bmp', 'png'];
         $prefix = $bgPath = $this->getBgPath();
         $this->bgFiles = arrayFilter(deepScandir($bgPath, $prefix), $scanBgExtension, function ($file) {
             if (false !== $position = strrpos($file, '.')) {
-                // dd(substr($file, $position + 1));
                 return substr($file, $position + 1);
             }
         });
