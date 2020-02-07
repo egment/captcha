@@ -7,11 +7,17 @@
  */
 namespace Egment;
 
+use Egment\Contracts\Configureable;
+use Egment\Contracts\RandomImageAble;
+use Egment\Image;
+use Egment\traits\RandomImage;
+use Egment\traits\SlideCaptchaConfigure;
 use ErrorException;
 
-class SlideCaptcha
+class SlideCaptcha implements Configureable, RandomImageAble
 {
-    //拼图部分大小
+    use SlideCaptchaConfigure, RandomImage;
+
     const PART_SIZE = 100;
 
     const FACTOR_POSITION_RIGHT = 0;
@@ -19,7 +25,13 @@ class SlideCaptcha
     const FACTOR_POSITION_LEFT = 2;
     const FACTOR_POSITION_UP = 3;
 
+    const DEFAULT_BG_PATH = __DIR__ . '/../assets/images';
+    const DEFAULT_STORE_PATH = './';
+
     protected $size;
+
+    //Image store path
+    protected $storePath;
 
     //master是否创建
     protected $masterCreated = false;
@@ -85,17 +97,42 @@ class SlideCaptcha
         self::FACTOR_POSITION_UP => [180, 0],
     ];
 
-    public function __construct(Image $image)
+    public function __construct(array $options = [], Image $image = null)
     {
-        $this->image = $image;
+        $this->init($options);
+        $this->image = $image ?: $this->createRandomImage();
         $this->originImage = new Image($this->image->getPath());
+    }
+
+    /**
+     * Create slide captcha
+     *
+     * @param integer $type
+     * @param [integer] $size
+     * @return array
+     */
+    public function create($type = 0, $size = null)
+    {
+        $size = $size ?: $this->getPartSize();
+        $master = $this->createMaster($size);
+        $part = $this->createPart($size);
+        $master_name = @$this->options['master_name'] ?: null;
+        $part_name = @$this->options['part_name'] ?: null;
+        $common = [
+            'master_path' => $master->save($master_name, $this->getStorePath()),
+            'part_path' => $part->save($part_name, $this->getStorePath()),
+        ];
+        return $type == 0 ? $common : $common + [
+            'master_base64' => $master->toBase64(),
+            'part_base64' => $part->toBase64(),
+        ];
     }
 
     /**
      * Create cpatcha master.
      *
      * @param [type] $size
-     * @return void
+     * @return Image
      */
     public function createMaster($size = null)
     {
@@ -106,12 +143,15 @@ class SlideCaptcha
         if ($info['width'] > $this->maxWidth || $info['height'] > $this->maxHeight) {
             throw new ErrorException("Image size exceeds maximum.");
         }
-        $this->size = $size = $size ?: floor($this->image->getHeight() / 5);
-        //截图部分凸起因子偏移
+        $this->size = $size = $size ?: $this->getPartSize() ?: floor($this->image->getHeight() / 5);
+        if ($this->size > ceil($this->image->getHeight() / 2)) {
+            throw new ErrorException("Too large size specifid for this image");
+        }
         $factorOffset = $size / 2;
         $this->factorRadious = $radious = floor($size / 2.5);
         $startX = mt_rand($this->offsetStartX + $radious, $info['width'] - $size - $radious);
-        $startY = mt_rand($this->offsetStartY + $radious, $info['height'] - $size - $radious);
+        // $startY = mt_rand($this->offsetStartY + $radious, $info['height'] - $size - $radious);
+        $startY = intval($info['height'] / 2 - $size / 2);
         $this->partSize = $size;
 
         $this->factorPoints = $points = [
@@ -148,7 +188,6 @@ class SlideCaptcha
         //down
         $this->rectPivotDownStart = [$points[self::FACTOR_POSITION_DOWN][0] + $radiousOffset, $startY + $size];
         $this->rectPivotDownEnd = [$points[self::FACTOR_POSITION_DOWN][0] - $radiousOffset, $startY + $size];
-        // dd($points[self::FACTOR_POSITION_DOWN][0]);
 
         //left
         $this->rectPivotLeftStart = [$startX, $points[self::FACTOR_POSITION_LEFT][1] + $radiousOffset];
@@ -161,6 +200,11 @@ class SlideCaptcha
         $this->image->drawRectangle($this->rectangleStartPoint, $size, $size, $color);
         $this->image->drawEllipse($this->factorStartPoint, $radious, $radious, $color);
         $this->masterCreated = true;
+        return $this->image;
+    }
+
+    public function getMaster()
+    {
         return $this->image;
     }
 
@@ -204,6 +248,11 @@ class SlideCaptcha
         $alpha = imagecolorallocatealpha($this->part->getIm(), 0, 0, 0, 127);
         imagecolortransparent($this->part->getIm(), $alpha);
         $this->partCreated = true;
+        return $this->part;
+    }
+
+    public function getPart()
+    {
         return $this->part;
     }
 
@@ -430,5 +479,25 @@ class SlideCaptcha
     public function getPartLeftPoint()
     {
         return $this->partLeftPoint;
+    }
+
+    public function setPartSize($partSize)
+    {
+        $this->partSize = $partSize;
+    }
+
+    public function getPartSize()
+    {
+        return $this->partSize;
+    }
+
+    public function setStorePath(string $path = '')
+    {
+        $this->storePath = realpath($path) ?: realpath(self::DEFAULT_STORE_PATH);
+    }
+
+    public function getStorePath()
+    {
+        return $this->storePath;
     }
 }
