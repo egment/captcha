@@ -128,6 +128,13 @@ class SlideCaptcha implements Configureable, RandomImageAble
         ];
     }
 
+    public function get($size = null)
+    {
+        $master = $this->createMaster($size)->toBase64();
+        $part = $this->createPart($size)->toBase64();
+        return ['master_base64' => $master, 'part_base64' => $part];
+    }
+
     /**
      * Create cpatcha master.
      *
