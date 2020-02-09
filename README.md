@@ -25,6 +25,18 @@ $path = (new captcha)->store();
 ]
 ```
 
+- You can also get base64encode image without store it through this code:
+```php
+    $captcha = new SlideCaptcha();
+    $result = $captcha->get();
+```
+Above code will only return base64code:
+[
+     'master_base64' => 'MASTER_WHAT_BASE64CODE_LOOKSLIKE',
+    'part_base64' => 'MASTER_WHAT_BASE64CODE_LOOKSLIKE',
+]
+
+
 
 
 - Use configure options
