@@ -3,7 +3,7 @@
  * @Description: This class is part of egment/captcha.
  * @Author: Egment
  * @Email egment@163.com
- * @Version v0.1.5
+ * @Version v0.1.6
  * @Date: 2020-02-02 21:36:15
  */
 namespace Egment;
@@ -11,8 +11,8 @@ namespace Egment;
 use Egment\Contracts\Configureable;
 use Egment\Contracts\RandomImageAble;
 use Egment\Image;
-use Egment\traits\RandomImage;
-use Egment\traits\SlideCaptchaConfigure;
+use Egment\Traits\RandomImage;
+use Egment\Traits\SlideCaptchaConfigure;
 use ErrorException;
 
 class SlideCaptcha implements Configureable, RandomImageAble
