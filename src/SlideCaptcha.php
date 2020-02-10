@@ -3,7 +3,7 @@
  * @Description: This class is part of egment/captcha.
  * @Author: Egment
  * @Email egment@163.com
- * @Version v0.1.6
+ * @Version v0.1.7
  * @Date: 2020-02-02 21:36:15
  */
 namespace Egment;
