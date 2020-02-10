@@ -1,6 +1,6 @@
 <?php
 
-namespace Egment\traits;
+namespace Egment\Traits;
 
 trait SlideCaptchaConfigure
 {
