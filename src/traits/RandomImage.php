@@ -45,6 +45,7 @@ trait RandomImage
         $this->bgPath = $path ? realpath($path) : realpath(self::DEFAULT_BG_PATH);
     }
 
+    //get path
     public function getBgPath()
     {
         return $this->bgPath ?: realpath(self::DEFAULT_BG_PATH);
