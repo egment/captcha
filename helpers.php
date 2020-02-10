@@ -3,19 +3,43 @@
 function deepScandir($dir, $prefix = '')
 {
     $files = [];
-    if (@$handle = opendir($dir)) {
-        while (($file = readdir($handle)) !== false) {
-            if ($file != ".." && $file != ".") {
-                if (is_dir($dir . "/" . $file)) {
-                    $files[$file] = deepScandir($dir . "/" . $file);
-                } else {
-                    $files[] = $prefix ? $prefix . '/' . $file : $file;
+    if (is_dir($dir)) {
+        if ($handle = opendir($dir)) {
+            //返回当前文件的条目
+            while (($file = readdir($handle)) !== false) {
+                if ($file != "." && $file != "..") {
+                    if (is_dir($dir . "/" . $file)) {
+                        $files[$file] = deepScandir($dir . "/" . $file, $prefix);
+                    } else {
+                        $files[] = $prefix ? $prefix . '/' . $file : $file;
+                    }
                 }
             }
+            closedir($handle);
+            return $files;
         }
-        closedir($handle);
     }
-    return $files;
+}
+
+function shallowScanDir($dir, $prefix = '')
+{
+    $files = [];
+    if (is_dir($dir)) {
+        if ($handle = opendir($dir)) {
+            //返回当前文件的条目
+            while (($file = readdir($handle)) !== false) {
+                if ($file != "." && $file != "..") {
+                    if (is_dir($dir . "/" . $file)) {
+                        continue;
+                    } else {
+                        $files[] = $prefix ? $prefix . '/' . $file : $file;
+                    }
+                }
+            }
+            closedir($handle);
+            return $files;
+        }
+    }
 }
 
 function arrayFilter(array $haystack, $compare = [], \Closure $closure = null)

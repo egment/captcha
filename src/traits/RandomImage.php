@@ -31,7 +31,7 @@ trait RandomImage
     {
         $scanBgExtension = $this->scanBgExtension ?: ['jpg', 'jpeg', 'bmp', 'png'];
         $prefix = $bgPath = $this->getBgPath();
-        $this->bgFiles = arrayFilter(deepScandir($bgPath, $prefix), $scanBgExtension, function ($file) {
+        $this->bgFiles = arrayFilter(shallowScanDir($bgPath, $prefix), $scanBgExtension, function ($file) {
             if (false !== $position = strrpos($file, '.')) {
                 return substr($file, $position + 1);
             }
