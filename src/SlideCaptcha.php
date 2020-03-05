@@ -124,16 +124,20 @@ class SlideCaptcha implements Configureable, RandomImageAble
             'part_path' => $part->save($part_name, $this->getStorePath()),
         ];
         return $type == 0 ? $common : $common + [
-            'master_base64' => $master->toBase64(),
+            'master_base64' => $master->toBase64($common['part_path'], '', 'img'),
             'part_base64' => $part->toBase64(),
         ];
     }
 
     public function get($size = null)
     {
-        $master = $this->createMaster($size)->toBase64();
-        $part = $this->createPart($size)->toBase64();
-        return ['master_base64' => $master, 'part_base64' => $part];
+        $master = $this->createMaster($size);
+        $part = $this->createPart($size);
+        $partPath = $part->save(null, $this->getStorePath());
+        $masterBase64 = $master->toBase64();
+        $partBase64 = $part->toBase64($partPath, '', 'img');
+        unlink($partPath);
+        return ['masert_base64' => $masterBase64, 'part_base64' => $partBase64];
     }
 
     /**
