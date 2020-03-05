@@ -124,8 +124,8 @@ class SlideCaptcha implements Configureable, RandomImageAble
             'part_path' => $part->save($part_name, $this->getStorePath()),
         ];
         return $type == 0 ? $common : $common + [
-            'master_base64' => $master->toBase64($common['part_path'], '', 'img'),
-            'part_base64' => $part->toBase64(),
+            'master_base64' => $master->toBase64($common['master_path'], '', 'img'),
+            'part_base64' => $part->toBase64($common['part_path'], '', 'img'),
         ];
     }
 
