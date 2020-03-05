@@ -3,7 +3,7 @@
  * @Description: This class is part of egment/captcha.
  * @Author: Egment
  * @Email egment@163.com
- * @Version v0.1.7
+ * @Version v0.2.0
  * @Date: 2020-02-02 21:36:15
  */
 namespace Egment;
@@ -51,7 +51,7 @@ class SlideCaptcha implements Configureable, RandomImageAble
     protected $factorRadious;
     //origin image resouce.
     protected $originImage;
-
+    //part偏移量
     protected $offsetStartX = 0;
     protected $offsetStartY = 0;
 
@@ -60,8 +60,11 @@ class SlideCaptcha implements Configureable, RandomImageAble
     protected $maxHeight = 1024;
 
     //Captcha part properties.
+    protected $partRightPoint;
+    protected $partDownPoint;
     protected $partMiddlePoint;
     protected $partLeftPoint;
+    protected $partUpPoint;
 
     protected $slideGap = 10;
 
@@ -159,13 +162,14 @@ class SlideCaptcha implements Configureable, RandomImageAble
         if ($this->size > ceil($this->image->getHeight() / 2)) {
             throw new ErrorException("Too large size specifid for this image");
         }
-        $factorOffset = $size / 2;
+        $factorOffset = $size / 2; //part的一半
         $this->factorRadious = $radious = floor($size / 2.5);
+        // part出现范围
         $startX = mt_rand($this->offsetStartX + $radious, $info['width'] - $size - $radious);
         // $startY = mt_rand($this->offsetStartY + $radious, $info['height'] - $size - $radious);
-        $startY = intval($info['height'] / 2 - $size / 2);
-        $this->partSize = $size;
-
+        $startY = intval($info['height'] / 2 - $size / 2); //固定part的高度在master中间
+        $this->partSize = $size; //part大小
+        // factor圆心
         $this->factorPoints = $points = [
             //Right
             [$startX + $size, $startY + $factorOffset],
@@ -176,8 +180,9 @@ class SlideCaptcha implements Configureable, RandomImageAble
             //Up
             [$startX + $factorOffset, $startY],
         ];
-        //factor points
+        //factor索引
         $this->factorPointIndex = mt_rand(0, count($points) - 1);
+        //factor开始点【圆心】
         $this->factorStartPoint = $points[$this->factorPointIndex];
 
         //reactangle points
@@ -185,6 +190,12 @@ class SlideCaptcha implements Configureable, RandomImageAble
         $this->rectangleXPoint = [$startX + $size, $startY];
         $this->rectangleYPoint = [$startX, $startY + $size];
         $this->rectangleXYPoint = [$startX + $size, $startY + $size];
+        //part points
+        $this->partRightPoint = $this->factorPointIndex == 0 ? [$points[0][0] + $radious, $points[0][1]] : [$this->rectangleXPoint[0], $this->rectangleXPoint[1] + $factorOffset];
+        $this->partDownPoint = $this->factorPointIndex == 1 ? [$points[1][0], $points[1][1] + $radious] : [$this->rectangleYPoint[0] + $factorOffset, $this->rectangleYPoint[1]];
+        $this->partMiddlePoint = [$startX + $size / 2, $startY + $size / 2];
+        $this->partLeftPoint = $this->factorPointIndex == 2 ? [$points[2][0] - $radious, $points[2][1]] : [$startX, $startY + $factorOffset];
+        $this->partUpPoint = $this->factorPointIndex == 3 ? [$points[3][0], $points[3][1] - $radious] : [$startX + $radious, $startY];
 
         $radiousOffset = $radious / 2;
 
@@ -204,9 +215,6 @@ class SlideCaptcha implements Configureable, RandomImageAble
         //left
         $this->rectPivotLeftStart = [$startX, $points[self::FACTOR_POSITION_LEFT][1] + $radiousOffset];
         $this->rectPivotLeftEnd = [$startX, $points[self::FACTOR_POSITION_LEFT][1] - $radiousOffset];
-
-        $this->partMiddlePoint = [$startX + $size / 2, $startY + $size / 2];
-        $this->partLeftPoint = $this->factorPointIndex == 1 ? [$points[1][0] - $radious, $points[1][1]] : [$startX, $startY + $size / 2];
 
         $color = [255, 255, 255];
         $this->image->drawRectangle($this->rectangleStartPoint, $size, $size, $color);
@@ -512,4 +520,55 @@ class SlideCaptcha implements Configureable, RandomImageAble
     {
         return $this->storePath;
     }
+
+    /**
+     * 获取part的各个坐标点
+     *
+     * @return array
+     */
+    public function getPartPoints()
+    {
+        return [
+            'right' => $this->partRightPoint,
+            'down' => $this->partDownPoint,
+            'middle' => $this->partMiddlePoint,
+            'left' => $this->partLeftPoint,
+            'up' => $this->partUpPoint,
+        ];
+    }
+
+    /**
+     * 获取part rectangele points。
+     *
+     * @return array
+     */
+    public function getRectanglePoints()
+    {
+        return [
+            'o' => $this->rectangleStartPoint,
+            'x' => $this->rectangleXPoint,
+            'y' => $this->rectangleYPoint,
+            'xy' => $this->rectangleXYPoint,
+        ];
+    }
+    /**
+     * 获取part宽度
+     *
+     * @return int
+     */
+    public function getPartWidth()
+    {
+        return $this->partRightPoint[0] - $this->partLeftPoint[0];
+    }
+
+    /**
+     * 获取part高度
+     *
+     * @return int
+     */
+    public function getPartHeight()
+    {
+        return $this->partDownPoint[1] - $this->partUpPoint[1];
+    }
+
 }
