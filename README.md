@@ -7,7 +7,7 @@
 ```php
 use Egment/captcha;
 
-$path = (new captcha)->store();
+$path = (new captcha)->create();
 //Above return value looks like this:
 [
     'master_path' => 'foo.jpg',
@@ -53,7 +53,7 @@ $options = [
     
 ]
 $captcha = new Capthca($options)
-$result = $captcha->store();
+$result = $captcha->create();
 
 ```
 
@@ -66,3 +66,16 @@ $captcha->auth($positionParameters, function ($params, $instance) {
     return $instance->authSlidePosition($params['position'], $instance->getPartMiddlePoint()[0]);
 });
 ```
+
+- Use getPartPoints method to get part points
+```php
+ $arr = $captcha->getPartPoints()
+```
+
+- Use getWidth and getHeight to get part properties
+```php
+ $width = $captcha->getPartWidth()
+ $height = $captcha->getPartHeight()
+ ```
+
+
