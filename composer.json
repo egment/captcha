@@ -9,7 +9,7 @@
         }
     ],
     "require": {
-        "egment/image": "^0.1"
+        "egment/image": "^0.2"
     },
     "autoload": {
         "psr-4": {
