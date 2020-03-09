@@ -230,7 +230,8 @@ class SlideCaptcha implements Configureable, RandomImageAble
     {
         $gap = 50;
         $partX = mt_rand($this->factorOffset + $this->factorDiameter + $gap, $this->imageInfo['width'] - ($this->partSize + $this->factorDiameter + $gap));
-        $partY = mt_rand($this->factorOffset + $this->factorDiameter + $gap, $this->imageInfo['height'] - $this->partSize - $this->factorDiameter);
+        $partY = mt_rand(10, $this->imageInfo['height'] - $this->partSize - $this->factorDiameter);
+        // $partY = mt_rand($this->factorOffset + $this->factorDiameter + $gap, $this->imageInfo['height'] - $this->partSize - $this->factorDiameter);
         // $partY = intval($this->imageInfo['height'] / 2 - $this->partSize / 2);
         return [$partX, $partY];
     }
