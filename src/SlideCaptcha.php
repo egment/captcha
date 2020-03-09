@@ -30,6 +30,7 @@ class SlideCaptcha implements Configureable, RandomImageAble
     const DEFAULT_STORE_PATH = './';
 
     const DEFAULT_PART_FRAME_COLOR = [255, 255, 255];
+    const DEFAULT_MASTER_FRAME_COLOR = [255, 255, 255];
 
     const REAL_PART_THICK = 1;
 
@@ -192,6 +193,7 @@ class SlideCaptcha implements Configureable, RandomImageAble
         $alpha = @$this->options['master_alpha'] ?: self::DEFAULT_MASTER_ALPHA;
         $this->drawMasterRectangle($color, $alpha);
         $this->drawMasterFilledArc($color, $alpha);
+        $this->drawMasterFrame();
         $this->masterCreated = true;
         return $this->image;
     }
@@ -342,6 +344,18 @@ class SlideCaptcha implements Configureable, RandomImageAble
         $this->drawPartLeftLine($color, $thick, $alpha);
     }
 
+    //画master frame框
+    protected function drawMasterFrame(array $color = [], $thick = null, int $alpha = 0)
+    {
+        $color = $color ?: @$this->options['master_frame_color'] ?: self::DEFAULT_MASTER_FRAME_COLOR;
+        $this->master_thick = $thick = $thick ?: @$this->options['master_thick'] ?: 1;
+        $this->drawFactorArc($color, $thick, $alpha, true);
+        $this->drawPartUpLine($color, $thick, $alpha, true);
+        $this->drawPartRightLine($color, $thick, $alpha, true);
+        $this->drawPartDownLine($color, $thick, $alpha, true);
+        $this->drawPartLeftLine($color, $thick, $alpha, true);
+    }
+
     /**
      * Cut appropriate part size.
      *
@@ -376,14 +390,14 @@ class SlideCaptcha implements Configureable, RandomImageAble
      * @param array $color
      * @return Image
      */
-    protected function drawFactorArc(array $color = [], $thick = 1, int $alpha = 0)
+    protected function drawFactorArc(array $color = [], $thick = 1, int $alpha = 0, $isMaster = false)
     {
+        $dynamicIm = $isMaster === false ? 'part' : 'image';
         if (empty($color)) {
             $color = [255, 255, 255];
         }
         $degress = self::$factorDrawArcMap[$this->factorPointIndex];
-        $this->part->drawArc($this->factorStartPoint, $this->factorDiameter, $this->factorDiameter, $degress[0], $degress[1], $color, $thick, $alpha);
-        return $this->part;
+        $this->{$dynamicIm}->drawArc($this->factorStartPoint, $this->factorDiameter, $this->factorDiameter, $degress[0], $degress[1], $color, $thick, $alpha);
     }
 
     protected function drawMasterFilledArc(array $color = [], int $alpha = 0)
@@ -409,56 +423,61 @@ class SlideCaptcha implements Configureable, RandomImageAble
      * @param array $color
      * @return bool
      */
-    protected function drawPartUpLine(array $color = [], $thick = 1, int $alpha = 0)
+    protected function drawPartUpLine(array $color = [], $thick = 1, int $alpha = 0, $isMaster = false)
     {
         if (empty($color)) {
             $color = [255, 255, 255];
         }
+        $dynamicIm = $isMaster ? 'image' : 'part';
         if ($this->factorPointIndex == self::FACTOR_POSITION_UP) {
-            $resStart = $this->part->drawLine($this->rectangleStartPoint, $this->rectPivotUpStart, $color, $alpha);
-            $resEnd = $this->part->drawLine($this->rectPivotUpEnd, $this->rectangleXPoint, $color, $alpha);
+            $resStart = $this->{$dynamicIm}->drawLine($this->rectangleStartPoint, $this->rectPivotUpStart, $color, $alpha);
+            $resEnd = $this->{$dynamicIm}->drawLine($this->rectPivotUpEnd, $this->rectangleXPoint, $color, $alpha);
             return $resStart && $resEnd ? true : false;
         }
-        return $this->part->drawLine($this->rectangleStartPoint, $this->rectangleXPoint, $color, $thick, $alpha);
+        return $this->{$dynamicIm}->drawLine($this->rectangleStartPoint, $this->rectangleXPoint, $color, $thick, $alpha);
     }
 
-    protected function drawPartRightLine(array $color = [], $thick = 1, int $alpha = 0)
+    protected function drawPartRightLine(array $color = [], $thick = 1, int $alpha = 0, $isMaster = false)
     {
         if (empty($color)) {
             $color = [255, 255, 255];
         }
+        $dynamicIm = $isMaster ? 'image' : 'part';
+
         if ($this->factorPointIndex == self::FACTOR_POSITION_RIGHT) {
-            $resStart = $this->part->drawLine($this->rectangleXPoint, $this->rectPivotRightStart, $color, $alpha);
-            $resEnd = $this->part->drawLine($this->rectPivotRightEnd, $this->rectangleXYPoint, $color, $alpha);
+            $resStart = $this->{$dynamicIm}->drawLine($this->rectangleXPoint, $this->rectPivotRightStart, $color, $alpha);
+            $resEnd = $this->{$dynamicIm}->drawLine($this->rectPivotRightEnd, $this->rectangleXYPoint, $color, $alpha);
             return $resStart && $resEnd ? true : false;
         }
-        return $this->part->drawLine($this->rectangleXPoint, $this->rectangleXYPoint, $color, $thick, $alpha);
+        return $this->{$dynamicIm}->drawLine($this->rectangleXPoint, $this->rectangleXYPoint, $color, $thick, $alpha);
     }
 
-    protected function drawPartDownLine(array $color = [], $thick, int $alpha = 0)
+    protected function drawPartDownLine(array $color = [], $thick, int $alpha = 0, $isMaster = false)
     {
         if (empty($color)) {
             $color = [255, 255, 255];
         }
+        $dynamicIm = $isMaster ? 'image' : 'part';
         if ($this->factorPointIndex == self::FACTOR_POSITION_DOWN) {
-            $resStart = $this->part->drawLine($this->rectangleXYPoint, $this->rectPivotDownStart, $color, $alpha);
-            $resEnd = $this->part->drawLine($this->rectPivotDownEnd, $this->rectangleYPoint, $color, $alpha);
+            $resStart = $this->{$dynamicIm}->drawLine($this->rectangleXYPoint, $this->rectPivotDownStart, $color, $alpha);
+            $resEnd = $this->{$dynamicIm}->drawLine($this->rectPivotDownEnd, $this->rectangleYPoint, $color, $alpha);
             return $resStart && $resEnd ? true : false;
         }
-        return $this->part->drawLine($this->rectangleXYPoint, $this->rectangleYPoint, $color, $thick = 1, $alpha);
+        return $this->{$dynamicIm}->drawLine($this->rectangleXYPoint, $this->rectangleYPoint, $color, $thick = 1, $alpha);
     }
 
-    protected function drawPartLeftLine(array $color = [], $thick = 1, int $alpha = 0)
+    protected function drawPartLeftLine(array $color = [], $thick = 1, int $alpha = 0, $isMaster = false)
     {
         if (empty($color)) {
             $color = [255, 255, 255];
         }
+        $dynamicIm = $isMaster ? 'image' : 'part';
         if ($this->factorPointIndex == self::FACTOR_POSITION_LEFT) {
-            $resStart = $this->part->drawLine($this->rectangleYPoint, $this->rectPivotLeftStart, $color, $alpha);
-            $resEnd = $this->part->drawLine($this->rectPivotLeftEnd, $this->rectangleStartPoint, $color, $alpha);
+            $resStart = $this->{$dynamicIm}->drawLine($this->rectangleYPoint, $this->rectPivotLeftStart, $color, $alpha);
+            $resEnd = $this->{$dynamicIm}->drawLine($this->rectPivotLeftEnd, $this->rectangleStartPoint, $color, $alpha);
             return $resStart && $resEnd ? true : false;
         }
-        return $this->part->drawLine($this->rectangleYPoint, $this->rectangleStartPoint, $color, $thick, $alpha);
+        return $this->{$dynamicIm}->drawLine($this->rectangleYPoint, $this->rectangleStartPoint, $color, $thick, $alpha);
     }
 
     /**
