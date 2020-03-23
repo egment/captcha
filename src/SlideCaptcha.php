@@ -108,6 +108,8 @@ class SlideCaptcha implements Configureable, RandomImageAble
 
     protected $part_thick = 1;
 
+    protected $options;
+
     public static $factorDrawArcMap = [
         self::FACTOR_POSITION_RIGHT => [270, 90],
         self::FACTOR_POSITION_DOWN => [0, 180],
@@ -118,9 +120,20 @@ class SlideCaptcha implements Configureable, RandomImageAble
     public function __construct(array $options = [], Image $image = null)
     {
         $this->init($options);
-        $this->image = $image ?: $this->createRandomImage();
         $this->imageInfo = $this->image->getInfo();
         $this->originImage = new Image($this->image->getPath());
+    }
+
+    public function init(array $options = [])
+    {
+        $this->options = $options;
+        $this->setStorePath(@$options['store_path'] ?: "");
+        $this->setBgPath(@$options['bg_path'] ?: "");
+        if (isset($options['bg_exts']) && is_array($options['bg_exts'])) {
+            $this->setScanBgExtension($options['bg_exts']);
+        }
+        $this->image = $this->createRandomImage();
+        $this->setPartSize(@$options['part_size'] ?: $this->getDefaultPartSize());
     }
 
     /**
@@ -276,6 +289,16 @@ class SlideCaptcha implements Configureable, RandomImageAble
     public function getMaster()
     {
         return $this->image;
+    }
+
+    public function getMasterHeight()
+    {
+        return $this->image->getHeight();
+    }
+
+    public function getMasterWidth()
+    {
+        return $this->image->getWidth();
     }
 
     /**
