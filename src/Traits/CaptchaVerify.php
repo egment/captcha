@@ -50,15 +50,21 @@ trait CaptchaVerify
         return $this;
     }
 
-    public function verify($verifiedPosition = null, $slide = null)
+    public function verify(array $data, $slide = null)
     {
         $this->verifySlideGap = $slide ?: $this->verifySlideGap;
-        try {
-            $verifiedPosition = $verifiedPosition ?: $_POST[self::$verifyPositionKey] ?: $_GET[self::$verifyPositionKey] ?: "";
-            $verifiedKey = $_POST[self::$verifyIdentifierKey] ?: $_GET[self::$verifyIdentifierKey] ?: "";
-        } catch (\Exception $e) {
-            throw new ErrorException("Invalid request parameters, Lack of POSITION or IDENTIFIED parameter " . $e->getMessage());
+
+        if(!(array_key_exists(self::$verifyIdentifierKey,$data) && $data[self::$verifyIdentifierKey])){
+            throw new ErrorException("Invalid request parameters, Lack of POSITION or IDENTIFIED parameter ");
         }
+
+        if(!(array_key_exists(self::$verifyPositionKey,$data) && $data[self::$verifyPositionKey])){
+            throw new ErrorException("Invalid request parameters, Lack of POSITION or IDENTIFIED parameter ");
+        }
+
+        $verifiedPosition =  $data[self::$verifyPositionKey];
+        $verifiedKey = $data[self::$verifyIdentifierKey];
+
         if (is_null($verifiedPosition) || $verifiedPosition === '') {
             return false;
         }
