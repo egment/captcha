@@ -3,7 +3,7 @@
  * @Description: This class is part of egment/captcha.
  * @Author: Egment
  * @Email egment@163.com
- * @Version v0.2.0
+ * @Version v0.2.5
  * @Date: 2020-02-02 21:36:15
  */
 namespace Egment;
@@ -11,13 +11,14 @@ namespace Egment;
 use Egment\Contracts\Configureable;
 use Egment\Contracts\RandomImageAble;
 use Egment\Image;
+use Egment\Traits\CaptchaVerify;
 use Egment\Traits\RandomImage;
 use Egment\Traits\SlideCaptchaConfigure;
 use ErrorException;
 
 class SlideCaptcha implements Configureable, RandomImageAble
 {
-    use SlideCaptchaConfigure, RandomImage;
+    use SlideCaptchaConfigure, RandomImage, CaptchaVerify;
 
     const PART_SIZE = 100;
 
@@ -117,6 +118,9 @@ class SlideCaptcha implements Configureable, RandomImageAble
         self::FACTOR_POSITION_UP => [180, 0],
     ];
 
+    protected $masterBase64;
+    protected $partBase64;
+
     public function __construct(array $options = [], Image $image = null)
     {
         $this->init($options);
@@ -167,11 +171,44 @@ class SlideCaptcha implements Configureable, RandomImageAble
         $part = $this->createPart($partSize);
         $masterPath = $master->save(null, $this->getStorePath());
         $partPath = $part->save(null, $this->getStorePath());
-        $masterBase64 = $master->toBase64($masterPath, '', 'img');
-        $partBase64 = $part->toBase64($partPath, '', 'img');
+        $this->masterBase64 = $master->toBase64($masterPath, '', 'img');
+        $this->partBase64 = $part->toBase64($partPath, '', 'img');
         unlink($masterPath);
         unlink($partPath);
-        return ['master_base64' => $masterBase64, 'part_base64' => $partBase64];
+        return $this;
+    }
+
+    public function output($output = [])
+    {
+        $export = [];
+        if (count($output) > 0) {
+            foreach ($output as $property) {
+                if ($property !== null && $property !== '') {
+                    $propertyName = array_reduce(explode('_', $property), function ($carry, $value) {
+                        return $carry .= ucfirst($value);
+                    });
+                    if (method_exists($this, 'get' . $propertyName)) {
+                        $export[$property] = $this->{'get' . $propertyName}();
+                    }
+                }
+            }
+            return $export;
+        }
+        return $this->outputBasic();
+    }
+
+    public function outputBasic()
+    {
+        return $this->output([
+            'master_base64',
+            'part_base64',
+            'master_width',
+            'master_height',
+            'part_width',
+            'part_height',
+            'top_offset',
+            'identifier',
+        ]);
     }
 
     /**
@@ -299,6 +336,16 @@ class SlideCaptcha implements Configureable, RandomImageAble
     public function getMasterWidth()
     {
         return $this->image->getWidth();
+    }
+
+    public function getMasterBase64()
+    {
+        return $this->masterBase64;
+    }
+
+    public function getPartBase64()
+    {
+        return $this->partBase64;
     }
 
     /**
